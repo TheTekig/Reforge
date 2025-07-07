@@ -1,337 +1,433 @@
-Reforge - Documento de Design de Jogo (GDD) 
+Game Design Document (GDD) - Reforge: O Começo do Fim 
+1. Visão Geral do Jogo (Game Overview)
+    Título do Jogo: Reforge: O Começo do Fim
+   
+    Conceito Principal: Um RPG de ação isométrico onde um protagonista "comum" liberta acidentalmente uma arma sarcástica e milenar que selou os horrores de outro reino.        Juntos, eles devem conter o colapso do mundo, com a progressão do jogador baseada na absorção de itens pela arma para desbloquear e evoluir habilidades.
+    Gênero: RPG de Ação, Isométrico, Comédia Sarcástica, Exploração, Dungeon Crawler.
+   
+    Plataformas Alvo: Inicialmente Windows Desktop (Windows 10+), com potencial para macOS, Linux, consoles e mobile no futuro.
+    Público-Alvo: Jogadores que apreciam RPGs de ação com foco em progressão não-linear, exploração, humor negro e narrativa interativa.
+   
+    Proposta de Venda Única (USP):
+    Uma arma protagonista com personalidade sarcástica e interativa, que comenta constantemente as ações do jogador.
+    Sistema de progressão inovador baseado na "absorção" de qualquer item para desbloquear e evoluir habilidades, permitindo builds orgânicas e experimentais.
+    Múltiplos finais moldados pelas escolhas do jogador, sua relação com a arma e as facções.
+    Mundo reagente que muda com as ações do jogador e um sistema de comércio regional dinâmico.
 
-1. Conceito Central
+2. História e Mundo (Story and World)
+   
+    2.1. Introdução: O Começo do Fim
+    O jogador é um cidadão comum de uma vila entediante que, durante uma caminhada sem rumo, cai em um buraco e encontra um baú misterioso. Ao abri-lo, libera uma rajada de 
+    energia, almas corrompidas e monstros, e uma arma brilhante surge no centro do baú. A arma, que se revela uma entidade viva, imediatamente culpa o jogador por ser "o 
+    fim do mundo".
+   
+    2.2. A Arma Sarcástica: Guardiã Esquecida
+    Essa arma não é qualquer relíquia. Ela é uma entidade viva, guardião milenar que selou os horrores do outro reino há séculos, sacrificando-se no processo. Seu poder era 
+    tão perigoso e a ameaça tão grande que ela mesma prendeu-se no baú como última camada de segurança. E você... bem, você foi "burro o suficiente pra tirar o cadeado". 
+    Agora, a arma está forçada a te acompanhar, pois só pode ser empunhada por quem a libertou — e não está nada feliz com isso.
+   
+    2.3. Escolha de Arma
+    No momento em que empunha a arma, ela assume a forma mais compatível com a "alma" atual do jogador, que pode ser:
+    🛡️ Escudo: Defensivo e provocador.
+    🗡️ Espada: Equilibrada e ácida.
+    🏹 Arco: Rápido e irônico.
+    🪓 Lança: Agressiva e sarcástica. 
+    Cada forma possui sua própria personalidade e forma de se comunicar, mantendo o deboche. O humor muda, mas o deboche continua.
 
-Reforge é um RPG 2D singleplayer com visão top-down isométrica (estilo Stardew Valley), focado na evolução do personagem através de sua arma ou escudo. O jogo combina exploração de biomas e dungeons com um sistema de defesa de ondas de inimigos, culminando em uma batalha final épica. O tom da narrativa é leve e sarcástico, com uma arma que atua como um companheiro zombeteiro.
+    2.4. Desequilíbrio dos Reinos
+    Com o selo rompido:
+     - As almas corrompidas escapam.
+     - Um reino sombrio começa a sobrepor o seu.
+     - Criaturas distorcidas invadem o mundo.
+     - NPCs começam a perder a sanidade, e alguns são possuídos. O mundo entra em colapso progressivo, e a única coisa que impede a destruição imediata é o vínculo tênue 
+      entre 
+     - o protagonista e a arma.
+   
+    2.5. Relação Jogador–Arma (Central)
+   
+    A arma:
+     - Te insulta, avisa, aconselha (contra vontade).
+     - Comenta suas decisões, estilo de jogo, erros e até diálogos com NPCs.
+     - Às vezes age sozinha se você hesita demais. O jogador e a arma formam uma dupla forçada, onde a evolução da relação define partes da história, das skills e do final 
+       obtido.
 
-2. Mecânicas de Jogo Principais
+3. Gameplay
+    3.1. Mecânicas Centrais de Jogo
+   
+        3.1.1. Movimentação e Colisão
+        Sistema de movimentação baseado em movimentação pixel a pixel com verificação de colisão via place_meeting e refinamento com sign() para suavidade.
+        Máscaras de colisão invisíveis serão usadas para objetos do cenário (árvores, pedras, geladeiras) para impedir passagem sem bloquear a visibilidade.
+        Elementos como moitas terão controle de profundidade com depth = -y para criar o efeito de sobreposição vertical.
+   
+        3.1.2. Combate e Golpes
+        O jogador inicia com uma arma básica (dependente da classe), que pode atacar em diferentes direções.
+        Ataques possuem cooldown controlado por alarm e detecção de acerto via place_meeting entre hitbox do golpe e objeto do inimigo.
+        Golpes não são apenas visuais: eles se comportam como instâncias (ex: obj_slash) com própria colisão, tempo de vida e animação.
+        Sistema de Stamina para controlar uso exagerado de dash, bloqueio ou combos.
+        Cooldown com Alarms: cada skill possui tempo de recarga próprio.
+        Sistema de Combo: bônus ao realizar ataques sem tomar dano por um tempo.
+   
+        3.1.3. Absorção de Itens (Core Mechanic)
+        A arma que o jogador encontra não apenas fala — ela consome. Sua verdadeira habilidade é a absorção de qualquer item com energia latente: desde uma folha boba até o     
+        coração de um arqui-demônio.
+        "Você me deu... uma folha seca. Que incrível. Vou usá-la para espantar mosquitos. Espera — isso virou uma skill?" Essa é a base do sistema de progressão.
+        A absorção ocorre quando o jogador se aproxima do item e interage ou passa por cima (via instance_place() + verificação de tipo).
+   
+    3.2. Sistema de Classes e Armas
+   
+        3.2.1. Escolha de Classe
+        No início do jogo, ao abrir o baú selado, o jogador é envolvido por almas que representam classes:
+        Espada: Balanceada, foco em combos e dano médio.
+        Escudo: Defesa superior, habilidade de empurrar ou refletir ataques.
+        Arco: Ataques à distância com mira precisa.
+        Lança: Alcance longo e ataque giratório. A escolha define o tipo base da arma, mas todas as armas compartilham o mesmo sistema de absorção e evolução.
+        3.2.2. Arma com Vontade Própria
+        A arma possui uma personalidade sarcástica e debochada. Dialoga com o jogador nos momentos-chave, fazendo piadas ou críticas durante o combate e decisões. Revela-se 
+        como o verdadeiro guardião selador dos arquidemônios, que selou a si mesmo para conter o poder.
 
-2.1. Classes e Armas Iniciais
-O jogador escolhe uma classe inicial que é definida por sua arma. A arma é o centro da progressão e não pode ser trocada (a princípio).
-Espada: Equilíbrio entre ataque e defesa.
-Lança: Alcance e perfuração.
-Machado: Dano bruto e quebra de armadura.
-Cajado: Suporte e magias elementais.
-Escudo: Tank, defesa e absorção mais eficiente.
-2.2. Sistema de Absorção de Itens (Core do Jogo)
-Itens encontrados no cenário (folhas, pedras, cascas, etc.) ou de inimigos (dentes, garras) podem ser absorvidos pela arma. Cada item desbloqueia uma habilidade única (skill) ou um modificador para a arma.
-Slots de Absorção: A arma possui slots limitados que aumentam com o progresso do jogador (nível ou conclusão de dungeons).
-Interações Únicas: Certos itens podem interagir entre si para liberar habilidades combinadas (ex: Folha + Carvão = Skill de Fumaça Venenosa).
-Categorias de Itens Absorvíveis:
-Natureza:
-Folha: Wind Dash (Mobilidade)
-Galho Seco: Wood Spike (Dano em área)
-Orvalho: Heal over Time (Suporte)
-Casca de Árvore: Bark Armor (Redução de dano)
-Flor Luminosa: Luminous Bloom (Cria uma área de luz que revela inimigos invisíveis)
-Raiz Retorcida: Entangling Roots (Imobiliza inimigos em uma área por um curto período)
-Orgânicos (Monstros):
-Dente: Berserk Mode (+Atk, -Def)
-Olho: Enemy Reveal (Mapa revela inimigos)
-Garras: Claw Combo (Ataque em sequência)
-Glândula de Veneno: Poison Aura (Aura tóxica)
-Asa de Morcego: Sonic Scream (Emite um grito sônico que atordoa inimigos)
-Pele de Lagarto: Camouflage (Torna o jogador invisível por um curto período)
-Minerais:
-Cristal: Skill Cooldown Reduzido (Buff)
-Obsidiana: Shadow Slash (Ataque rápido e sombrio)
-Carvão: Flame Trail (Rastro de fogo)
-Rocha: Earthquake (Ataque em área)
-Gema Bruta: Gemstone Shard (Lança fragmentos de gema que perfuram inimigos)
-Minério de Ferro: Iron Skin (Aumenta a defesa temporariamente)
-Lendários / Místicos:
-Fragmento Estelar: Starfall (Supremo)
-Poeira Temporal: Time Skip (Congela tempo)
-Coração do Golem: Pedra-viva Defensora (Pet)
-Essência Selvagem: Instinto Primal (Transforma jogador em “forma selvagem”)
-Escama de Dragão: Dragon's Breath (Lança um cone de fogo ou gelo)
-Pena de Fênix: Rebirth (Revive o jogador com uma porção de vida após a morte)
-Arcanos:
-Pena de Grifo: Glide (Movimento aéreo temporário)
-Pó de Fada: Illusionary Clone (Cria um clone para distrair inimigos)
-Lágrima de Sereia: Water Shield (Escudo que reflete projéteis)
-Cabelo de Bruxa: Hex (Amaldiçoa um inimigo, reduzindo seus atributos)
-Olho de Oráculo: Foresight (Prevê ataques inimigos, concedendo bônus de esquiva)
-Selo Quebrado: Rune Burst (Libera uma explosão de runas arcanas que causam dano em área)
-Artificiais/Tecnológicos (Ruínas Antigas):
-Engrenagem Enferrujada: Overcharge (Aumenta temporariamente a velocidade de ataque)
-Circuito Quebrado: Static Field (Cria uma área de dano elétrico)
-Bateria Descarregada: Energy Burst (Libera uma explosão de energia em volta)
-Cabo de Aço: Grappling Hook (Puxa o jogador para um ponto ou puxa um inimigo)
-Placa de Metal: Reinforced Armor (Aumenta a armadura e resistência a empurrões)
-Núcleo de Energia: Core Overload (Causa uma explosão de dano massivo após um curto atraso)
-Corrompidos/Sombrios:
-Cristal de Sombra: Shadow Step (Teleporte de curta distância)
-Gota de Sangue Corrompido: Bloodlust (Rouba vida dos inimigos em ataques)
-Pele de Abissal: Void Barrier (Cria uma barreira que absorve dano mágico)
-Olho de Demônio: Fear Aura (Causa medo em inimigos próximos)
-Tentáculo de Vazio: Void Grasp (Puxa inimigos para perto e causa dano de sombra)
-Alma Perdida: Soul Siphon (Drena a energia vital de um inimigo para restaurar Aura)
-Aquáticos:
-Escama de Dragão Marinho: Aquatic Breath (Permite respirar debaixo d'água e nadar mais rápido)
-Pérola Luminosa: Luminous Orb (Lança um orbe de luz que cega inimigos)
-Alga Curativa: Regenerative Wrap (Cura gradual e remove debuffs)
-Dente de Kraken: Tidal Wave (Invoca uma onda que empurra e causa dano)
-Concha Resonante: Sonar Pulse (Emite um pulso que revela inimigos em uma grande área e os desacelera)
-Guelra de Peixe-Espada: Swift Current (Aumenta a velocidade de movimento e ataque em áreas aquáticas)
-2.3. Sistema de Habilidades Ativas Equipadas
-O jogador absorve múltiplos itens, cada um concedendo uma skill (ativa, passiva, aura, etc.). O jogador escolhe um número limitado de skills ativas para equipar e usar em combate, mapeadas em botões (Q, E, R, Shift, etc.).
-Tipos de Slots:
-Ativas: 3 ou 4 skills mapeadas em botões.
-Passivas: 2 ou 3 skills sempre ativadas.
-Aura/Suporte: 1 skill (ex: Aura de Veneno, Pet defensivo).
-Recurso "Aura": Algumas skills consumirão um recurso chamado "Aura" para serem ativadas, que se regenera com o tempo ou através de ações específicas.
-Skills Temporárias: Algumas skills podem conceder buffs, debuffs ou efeitos que duram por um período limitado de tempo após a ativação.
-Loadouts: Possibilidade de salvar e trocar combinações de skills (builds rápidas).
-2.4. Exploração e Biomas
-O mapa será um mundo aberto com múltiplas áreas exploráveis, dungeons temáticas e eventos aleatórios. A progressão da dificuldade será orgânica, com áreas naturalmente mais desafiadoras.
-Design do Mapa-Múndi:
-O jogador terá acesso a um mapa-múndi no inventário, que mostrará a geografia geral do mundo, biomas, vilas e locais de dungeons.
-Navegação por Referência: O mapa não exibirá a localização atual do jogador. A navegação será feita por meio de marcos visuais, pontos de referência e dicas de NPCs, incentivando a exploração e a memorização do ambiente.
-Conexão de Biomas: Os biomas se conectarão de forma gradual, com transições visuais e de dificuldade suaves.
-Construções e Cidades Regionais: Cada bioma terá construções e cidades/assentamentos com NPCs que refletem a cultura e os recursos daquela região.
-Delimitação Orgânica da Dificuldade:
-Áreas Iniciais (Seguras): Próximas à vila de Oakhaven, com inimigos mais fracos e recursos básicos. Essas áreas servirão como um "hub" seguro para o jogador se familiarizar com as mecânicas.
-Zonas de Corrupção dos Arquidemônios: Conforme os Arquidemônios são liberados e se espalham pelo mapa, eles corromperão biomas específicos. Essas áreas corrompidas se tornarão naturalmente mais perigosas:
-Inimigos Mais Fortes: Os monstros nessas zonas serão mais poderosos, com maior vida, dano e habilidades mais complexas, alinhados com o tema do Arquidemônio que as controla.
-Recursos Mais Raros: Itens de absorção e materiais de crafting mais valiosos serão encontrados nessas áreas de maior risco.
-Eventos Ambientais Hostis: A corrupção pode manifestar-se em perigos ambientais, como névoas venenosas, terrenos instáveis, armadilhas naturais ou áreas que drenam a Aura do jogador.
-Mudança Visual: Os biomas corrompidos terão uma estética visual distinta e mais sombria, refletindo a influência do Arquidemônio (ex: árvores retorcidas na Floresta Viva, cristais pulsantes na Caverna Sombria).
-Transições Graduais: As transições entre as zonas de dificuldade serão visuais e mecânicas, mas não abruptas. O jogador poderá sentir a dificuldade aumentando gradualmente ao se afastar das áreas seguras ou ao se aproximar de um foco de corrupção.
-Dungeons: Cada bioma terá dungeons temáticas que servirão como desafios adicionais e locais para encontrar itens específicos e segredos. Cada dungeon pode ter 5 andares com minichefes e chefes temáticos, alinhados com a dificuldade da área circundante.
-Dungeons (Mapas Separados): As dungeons serão mapas separados, acessíveis através de entradas específicas no mapa-múndi. Ao entrar em uma dungeon, o jogador será transportado para um novo ambiente isolado.
-Biomas:
-Floresta Viva: Folhas, galhos, orvalho. Inimigos: Plantas, insetos, bestas.
-Caverna Sombria: Cristais, carvão, rochas. Inimigos: Golems, morcegos, serpentes.
-Pântano Venenoso: Garras, venenos, flor tóxica. Inimigos: Sapos mutantes, fungos, cobras.
-Ruínas Místicas: Fragmentos, poeira, essência. Inimigos: Espíritos, magos, sombras.
-2.5. Sistema de Waves
-Entre as dungeons, o jogador pode enfrentar ondas de inimigos. A cada X ondas, um Mini-Boss aparece. O jogo culmina na Wave 100 com o Boss Final.
-Temporizador entre Waves: Após a primeira wave (tutorial) na vila, um contador de tempo será ativado, indicando o período até o início da próxima onda de inimigos. Este tempo será de aproximadamente 30 minutos.
-Objetivo do Temporizador: Este período é crucial para o jogador explorar, coletar itens, absorver novas habilidades, interagir com NPCs, realizar quests e fortalecer sua arma em preparação para a próxima onda.
-Conexão com os Arquidemônios e Localização das Waves:
-Cada um dos dez Arquidemônios liberados é diretamente responsável por um "pack" de 10 ondas de inimigos.
-A cada novo pack de waves, o jogo indicará a região do mapa que está sob a influência do próximo Arquidemônio. É nessa região específica que as próximas 10 ondas ocorrerão.
-O temporizador de 30 minutos representa o tempo que o jogador tem para chegar e se preparar na região designada antes que a próxima onda comece.
-Penalidades por Falha na Wave: Se o jogador não estiver na região designada quando o temporizador chegar a zero, ou se falhar em iniciar a wave a tempo, as seguintes penalidades podem ser aplicadas:
-Aumento da Corrupção: A área designada para a wave e as regiões adjacentes sofrerão um aumento significativo na corrupção, tornando os inimigos mais fortes, mais numerosos e o ambiente mais hostil (ex: surgimento de armadilhas ou debuffs ambientais).
-Debuffs no Jogador: O jogador pode receber debuffs temporários que afetam seus atributos (ex: redução de dano, velocidade de movimento, regeneração de Aura).
-Impacto nos NPCs e Recursos: Dependendo da gravidade da falha, NPCs na área afetada podem ser feridos ou realocados, e recursos (como pontos de comércio ou locais de coleta de itens raros) podem ser temporariamente inacessíveis ou destruídos.
-Aceleração do Próximo Temporizador: O tempo para a próxima wave pode ser reduzido, criando uma pressão maior para o jogador se recuperar e se preparar.
-Ondas Mais Difíceis: A wave subsequente pode começar com inimigos mais avançados ou com modificadores de dificuldade adicionais.
-Pausa do Temporizador: O temporizador será pausado automaticamente quando o jogador entrar em uma dungeon e retomará a contagem quando o jogador sair, permitindo que a exploração de dungeons não seja penalizada pelo tempo.
-Avanço Rápido do Tempo: O jogador terá a opção de "dormir" em uma cama na vila ou em um acampamento no mapa para pular o tempo restante até os minutos finais antes da próxima wave, permitindo que se preparem para o combate iminente quando se sentirem prontos.
-2.6. Design de Inimigos
-Cada "pack" de 10 ondas, que antecede um boss, terá um tema específico de inimigos, garantindo variedade e progressão visual e mecânica.
-Temas Ditados pelos Arquidemônios: O tema de cada pack de waves é diretamente influenciado pela natureza do Arquidemônio que o controla. Por exemplo:
-O Arquidemônio da Pestilência pode gerar ondas de insetoides e criaturas doentias.
-O Arquidemônio da Discórdia pode invocar hordas de goblins e hobgoblins em constante conflito.
-O Arquidemônio da Estagnação pode criar inimigos elementais de pedra e golens lentos, mas resistentes.
-Resistências e Vulnerabilidades: Cada tipo de inimigo (ou pack de inimigos) terá resistências e/ou vulnerabilidades específicas a certos tipos de dano ou efeitos de skill (ex: inimigos de fogo são resistentes a skills de fogo, mas vulneráveis a água; inimigos blindados são resistentes a dano perfurante, mas vulneráveis a dano de concussão). Isso incentivará o jogador a diversificar suas skills e adaptar sua estratégia de combate.
-Exemplos de Temas por Pack de Waves:
-Pack 1 (Waves 1-10): Insetoides: Inimigos com características de insetos, como aranhas, besouros gigantes, moscas venenosas.
-Pack 2 (Waves 11-20): Goblins e Hobgoblins: Variações de goblins, hobgoblins, e talvez alguns trolls menores, com diferentes armas e padrões de ataque.
-Packs Futuros: Poderiam incluir monstros elementais, criaturas sombrias, autômatos antigos, feras mutantes, etc., cada um com suas próprias mecânicas e habilidades, sempre alinhados com o Arquidemônio que os comanda.
-2.7. Sistema de Combate do Jogador
-O combate será dinâmico, combinando ataques normais com a utilização estratégica de skills.
-Ataques Normais (Básicos):
-Serão iniciados com cliques do mouse.
-O jogador poderá realizar sequências de ataques (combos) com um, dois ou até três cliques consecutivos do mouse, aumentando o dano ou aplicando efeitos adicionais no último golpe.
-Combos com Skills:
-Os ataques normais poderão ser perfeitamente combinados com as skills ativas. Por exemplo, um ataque básico pode ser seguido imediatamente por uma skill de área ou um dash, criando sequências de combate fluidas e personalizadas.
-Essa integração permitirá ao jogador criar suas próprias "builds" de combate, explorando sinergias entre os ataques básicos da arma e as habilidades desbloqueadas pela absorção de itens.
-Foco em Skills: O jogador terá a flexibilidade de focar predominantemente no uso de skills, mesmo sem a necessidade de combos com ataques básicos, permitindo builds mais orientadas para magia ou suporte.
-2.8. Design de Chefes (Bosses)
-Os Mini-Bosses e, principalmente, os Arquidemônios, terão um design de combate complexo e multifacetado.
-Padrões de Ataque Distintos: Cada chefe possuirá um conjunto único de ataques e habilidades, exigindo que o jogador aprenda e se adapte aos seus padrões.
-Múltiplas Fases: Os chefes terão duas fases principais:
-Fase Inicial: O chefe apresentará um conjunto de ataques e mecânicas padrão.
-Fase Final (Intensificada): Quando a saúde do chefe atingir um certo limiar (ex: 50% ou 25%), ele entrará em uma fase mais intensa. Nesta fase, o chefe pode:
-Desbloquear novos ataques mais poderosos ou variações dos existentes.
-Aumentar sua velocidade de ataque ou movimento.
-Invocar mais lacaios ou criar perigos ambientais na arena.
-Tornar-se mais agressivo, refletindo sua proximidade de ser selado.
-Mecânicas de Arena: As arenas de combate contra chefes podem conter elementos interativos ou perigos ambientais que o jogador pode usar a seu favor (ex: pilares para se esconder, armadilhas que podem ser ativadas nos inimigos) ou que representam desafios adicionais a serem evitados.
-Fraquezas e Resistências: Assim como os inimigos comuns, os chefes terão fraquezas e resistências específicas a tipos de dano ou efeitos de status, incentivando o jogador a usar as skills e builds mais adequadas para cada confronto.
+4. Sistema de Skills e Progressão
+    4.1. A Arma que Absorve Tudo (e Reclama de Tudo):
+    Ao derrotar inimigos, explorar o mundo ou quebrar objetos, o jogador pode encontrar itens que alimentam o sistema da arma:
+    🌿 Itens Naturais: Folhas, pedras, sementes -> Skills básicas ou utilitárias.
+    🧠 Espólios Comuns: Inimigos normais (ondas) -> Skills ofensivas ou defensivas.
+    💀 Espólios Corrompidos: Inimigos corrompidos ou elites -> Skills complexas e sinistras.
+    🔥 Núcleos Arqui-Demônios: Bosses de dungeon / chefes de wave -> Skills únicas, com mecânicas próprias.
+   
+    4.2. Progressão das Skills:
+    Cada skill possui 3 níveis de poder. Ela evolui por:
+    Uso contínuo (ganham XP).
+    Ou alimentação com mais itens do mesmo tipo (absorção extra, ex: consumir mais venenos melhora skill "Dardo Tóxico").
+    Nível 1: Skill básica desbloqueada.
+    Nível 2: Skill é fortalecida após uso contínuo ou fusão com mais itens similares.
+    Nível 3: Forma final da skill, com efeitos adicionais, redução de cooldown ou novo comportamento. "Você está tentando me fazer cuspir fogo com cinco tomates podres? … 
+    Tá. Funcionou."
+   
+    4.3. Propriedades dos Itens
+    Cada item absorvível carrega propriedades como (no formato tipo JSON):
+    JSON
+    {
+      "nome": "Espinho de Trepadeira",
+      "sprite": "spr_espinho",
+      "poder": 5,
+      "valor": 10,
+      "consumivel": true,
+      "absorcao": true,
+      "skill_tipo": "veneno",
+      "raridade": "comum"
+   }
+   
+    Essas informações alimentam o sistema da arma e o inventário, e cada tipo pode ser usado para desbloquear novos estilos de build, como:
+    Build de veneno
+    Build de gelo (com névoas de espíritos)
+    Build de teleporte (com cristais de sombra)
+    Build tanque (com escamas de arqui-demônios)
+   
+    4.4. Aplicações Práticas:
+    O jogador explora e coleta tudo que vê.
+    Testa combinações — o sistema não revela tudo de cara.
+    Skills desbloqueadas alteram drasticamente o gameplay.
+    O Sistema lembra um pouco Megaman, Kirby ou Risk of Rain — mas com identidade própria e sarcasmo constante. "Absorveu um graveto e aprendeu a cutucar. Magnífico.            Realmente somos a última esperança da humanidade."
+   
+    4.5. Categorias de Itens e Rota de Builds:
+    Itens dropados em combate possuem tags e elementos latentes, que determinam o tipo de skill ao serem absorvidos. Assim surgem rotas de build:
+    Caminho de Build / Tipo de Itens Absorvidos / Exemplos de Skills
+   
+    🥾 Ágil
+    Penas, folhas, cascos leves
+    Dash Triplo, Corte Relâmpago
+    🛡️ Tank
+    Carapaças, escamas, metais
+    Escudo Espinhoso, Absorver Golpe
+    🔥 Ofensiva
+    Brasas, garras, espólios demoníacos
+    Explosão Demoníaca, Corte Flamejante
+    🌿 Controle
+    Raízes, cogumelos, gelo, sombra
+    Prisão de Espinhos, Gelo Estagnante
+    🧬 Mística
+    Fragmentos mágicos, almas, runas
+    Teleporte, Skill Aleatória
+    ⚡ Caótica
+    Mistura instável de tudo
+    Efeitos imprevisíveis e combos sinérgicos
 
-3. Progressão do Jogador
 
-Níveis de Personagem: Ganhos ao derrotar inimigos.
-Níveis da Arma: Aumentam ao absorver itens e vencer desafios.
-Slots de Absorção: Aumentam conforme o progresso.
-3.1. Árvore de Habilidades e Nivelamento de Skills
-Árvore de Habilidades Visual: Haverá uma árvore de habilidades visualmente representativa, onde a arma escolhida pelo jogador estará no centro.
-Ramificações por Categoria: Ramificações se estenderão a partir da arma central, cada uma representando uma categoria de itens absorvíveis (Natureza, Minerais, Orgânicos, Arcanos, etc.).
-Conexão de Skills: À medida que o jogador absorve um item, a skill correspondente será desbloqueada e aparecerá na ramificação da categoria à qual pertence, conectada à arma.
-Nivelamento de Skills (3 Níveis): Cada skill desbloqueada terá 3 níveis de melhoria.
-Melhorias Simples: Os upgrades serão simples e diretos, aumentando aspectos chave da skill (ex: uma skill de dash terá sua velocidade ou distância aumentada; uma skill de dano terá seu poder ampliado).
-Progressão por Uso: Para upar uma skill, o jogador precisará utilizá-la múltiplas vezes em combate. Quanto mais uma skill for usada, mais experiência ela ganhará, progredindo para o próximo nível.
-Aceleração Mínima por Absorção: Absorver mais itens do mesmo tipo que desbloqueiam uma skill específica (ex: consumir mais folhas para a skill Wind Dash) concederá uma aceleração mínima na quantidade de experiência necessária para upar aquela skill. Isso incentiva a coleta contínua de itens, mesmo após o desbloqueio inicial.
-Caminhos Opcionais: Exploração vs. Combate intensivo.
-
-4. NPCs e Funções
-
-Mestre da Forja: Evolui os slots da arma.
-Ermitão da Floresta: Oferece combinações secretas de itens.
-Mercador de Runas: Vende itens raros (aparece à noite).
-Estudiosa Mística: Revela o passado da arma.
-
-5. História Principal – Reforge
-
-5.1. Introdução: O Despertar do Caos
-Você é Kael, um jovem habitante de Oakhaven, uma vila pacata e isolada, conhecida por suas tradições e por ignorar os sussurros de um mundo maior. Entediado com a rotina, você decide explorar a antiga Caverna do Sussurro, um local proibido por lendas sobre um "mal adormecido". No coração da caverna, você encontra um baú ancestral, selado não por correntes, mas por runas místicas que parecem vibrar com uma energia contida.
-Ao tocar o selo, uma explosão de energia irrompe, rasgando não apenas a caverna, mas o próprio tecido da realidade. Uma fenda dimensional se abre brevemente, e você sente fragmentos de almas e entidades distorcidas se espalharem pelo mundo. No centro da devastação, onde o baú estava, flutua uma arma pulsante e luminosa, com uma aura que te chama.
-Fascinado (e talvez um pouco ingênuo), você a toca. O mundo ao seu redor congela por um instante. Você é transportado para um Plano Astral, um espaço etéreo onde as almas das armas ancestrais residem. É aqui que você deve escolher sua arma inicial, que se fundirá com sua alma. Ao fazer a escolha, a arma se materializa em sua mão, e uma voz, sarcástica e com um toque de resignação, ecoa em sua mente:
-"Parabéns, idiota. Você acabou de libertar um mal antigo que estava quietinho há séculos. Agora, adivinha quem vai resolver isso? Isso mesmo: você. E eu, claro. Afinal, sou a única coisa que te impede de virar pó agora."
-5.2. A Corrupção se Espalha: As Primeiras Ondas
-O chão do Plano Astral se desfaz, e você retorna à caverna, que agora está em ruínas. A parede externa desmorona, revelando uma Oakhaven em chamas. Criaturas distorcidas, os primeiros arautos da corrupção, invadem a vila. A primeira onda de inimigos começa, servindo como um tutorial de combate, enquanto a voz da arma continua a te guiar com comentários mordazes e conselhos práticos (mesmo que relutantes).
-Você descobre que a arma em sua mão não é apenas uma arma, mas um fragmento do próprio Selo Primordial, uma prisão mística criada há eras para conter os Arquidemônios. Ao quebrar o selo, você liberou dez dessas entidades, cada uma representando uma faceta da corrupção e do caos.
-5.3. Os Arquidemônios e a Missão
-Os dez Arquidemônios agora vagam pelo mundo, cada um emanando uma aura de corrupção que distorce a vida e a paisagem dos biomas. Cada um deles é responsável por um "pack" de 10 waves de inimigos temáticos, culminando em um Mini-Boss e, finalmente, no próprio Arquidemônio. Sua missão principal é:
-Exterminar as criaturas corrompidas que escaparam e se espalharam.
-Derrotar e selar os 10 Arquidemônios, um por um, absorvendo parte de sua essência na arma para restaurar o Selo Primordial.
-Purificar o mundo da corrupção, com a ajuda da sua arma (que nunca perde a chance de te zoar).
-Impedir o colapso completo da realidade antes que a 100ª Wave Final e o último Arquidemônio destruam tudo.
-5.4. Pontos de Virada e Revelações (Mid-Game)
-Conforme você derrota mais Arquidemônios e absorve suas essências, a arma começa a se lembrar de seu passado. Ela revela que não é apenas um fragmento do selo, mas a consciência aprisionada de um antigo Guardião Primordial, que se sacrificou para se tornar o selo. Parte do sarcasmo da arma vem de sua frustração por estar presa e por você ter sido o "idiota" que a libertou (e a colocou de volta no trabalho).
-A Estudiosa Mística (NPC): Ela se torna crucial, ajudando a traduzir textos antigos e a entender a verdadeira natureza da corrupção e do Selo Primordial. Ela pode revelar que a absorção das essências dos Arquidemônios não é apenas para selá-los, mas também para despertar o poder total do Guardião Primordial dentro da arma.
-A Escalada da Corrupção: A cada Arquidemônio derrotado, os restantes se tornam mais poderosos e a corrupção se intensifica em outras áreas do mapa, alterando biomas e tornando-os mais perigosos. Isso força o jogador a tomar decisões estratégicas sobre qual Arquidemônio perseguir primeiro.
-A Tentação do Poder: A arma, à medida que recupera memórias e poder, pode começar a sussurrar sobre as vantagens de não selar todos os Arquidemônios, mas sim de absorver seu poder para si mesmo, tornando-se uma entidade inigualável. Isso cria um dilema moral para o jogador.
-A Traição Inesperada: Um NPC de confiança (talvez o Mercador de Runas, que lucra com o caos, ou até mesmo o Mestre da Forja, que busca o poder dos Arquidemônios para si) pode tentar sabotar seus esforços ou roubar essências de Arquidemônios, levando a uma batalha inesperada ou a uma nova linha de quest.
-5.5. O Clímax: A Wave 100 e o Último Arquidemônio
-A contagem regressiva para a Wave 100 se acelera, e a corrupção atinge seu ápice. O último Arquidemônio se revela, não como um ser isolado, mas como a manifestação da Desesperança Primordial, a entidade que orquestrou a quebra do selo e a libertação dos outros. A batalha final ocorre em um cenário distorcido, talvez no próprio coração da fenda dimensional que você abriu.
-A luta contra o último Arquidemônio é multifásica, testando todas as suas habilidades, sua build e sua capacidade de adaptação. A arma, agora quase totalmente restaurada, se comunica de forma mais intensa, oferecendo insights táticos e comentários finais.
-5.6. Os Finais Possíveis
-Ao derrotar o último Arquidemônio, o destino do mundo e da arma estará em suas mãos.
-Final 1: O Sacrifício do Guardião (Final Bom/Neutro):
-Você escolhe usar o poder total do Guardião Primordial para selar completamente todos os Arquidemônios e fechar a fenda dimensional. A arma, tendo cumprido seu propósito, se desprende de você. Ela pode se desintegrar em luz, ou se transformar em uma estrela cadente, finalmente livre de sua prisão. O mundo é purificado, mas você perde seu poder único e a companhia da arma. A vida em Oakhaven retorna ao normal, e você se torna uma lenda esquecida, um herói anônimo.
-Diálogo da Arma: "Bem... fizemos isso. Agora, para a parte chata. Adeus, Kael. Não se meta em mais encrencas, ou eu vou ter que te arrastar de volta do pós-vida para chutar sua bunda de novo. Foi... menos pior do que eu esperava. Talvez."
-Final 2: O Novo Arquidemônio (Final Neutro/Ruim):
-Seduzido pelo poder dos Arquidemônios e pelos sussurros da arma (que pode ter sua própria agenda oculta de dominação), você decide não selar a corrupção, mas sim absorver o poder de todos os Arquidemônios para si. Você se torna uma entidade incrivelmente poderosa, mas também corrompida, uma nova ameaça ou um governante tirânico. O mundo é "salvo" do caos dos Arquidemônios, mas sob sua nova e sombria ordem. A arma se funde permanentemente com você, e sua voz se torna uma extensão da sua própria ambição.
-Diálogo da Arma: "Hah! Sabia que você tinha potencial. O que são alguns bilhões de almas corrompidas quando se tem o poder de um deus? Agora, Kael, vamos mostrar a este mundo quem realmente manda. Reforge... para sempre."
-Final 3: A Companhia Inesperada (Final Neutro/Alternativo):
-Após a derrota do último Arquidemônio, a arma, tendo recuperado suas memórias e desenvolvido um laço com você, decide que não quer se separar. Ela se recusa a ser selada novamente ou a se desintegrar. Em vez disso, ela escolhe permanecer ao seu lado, não como uma prisão, mas como uma companheira. Você mantém uma porção do poder do Selo Primordial e a companhia da arma, que continua com sua personalidade sarcástica, ajudando-o a explorar o mundo pós-corrupção e a lidar com as novas ameaças que surgirem. O mundo é salvo, e você e a arma embarcam em novas aventuras.
-Diálogo da Arma: "Achou que ia se livrar de mim tão fácil, campeão? Depois de toda essa bagunça que você causou, alguém tem que ficar de olho em você. Além disso, o tédio é um inimigo pior que qualquer demônio. Vamos lá, o mundo ainda tem muitos lugares para zoar... digo, para explorar."
-5.7. Tom e Estilo
-Diálogos com humor sarcástico e leve (inspirado em Hades, The Messenger). A arma é quase um personagem: te guia, te ajuda, mas também te zoa o tempo todo. Algumas decisões (como a traição de um NPC ou a tentação do poder) podem ter consequências narrativas leves que influenciam o final.
-
-6. Visual e Técnica
-
-Visão: 2D top-down com ângulo isométrico leve.
-Estilo Gráfico: Pixel art simples e charmosa.
-Plataforma: PC (GameMaker Studio).
-Linguagem: GML.
-Modo: Singleplayer.
-
-7. Gameplay Loop e Controles
-
-O jogo terá um ciclo de gameplay que alterna entre exploração, interação e combate.
-7.1. Exploração e Interação
-Tempo de Exploração: O jogador terá tempo para explorar o mapa e as dungeons entre as ondas de inimigos ou fases da história.
-Interação com NPCs: NPCs estarão disponíveis para fornecer dicas sobre a localização de dungeons especiais, oferecer comércio para compra de itens de suporte e aprofundar a lore do mundo através de diálogos.
-7.2. Controles
-Movimentação: Utilização das teclas WASD para movimentação do personagem.
-Habilidades e Magias: O Mouse será utilizado para mirar e lançar magias e habilidades.
-Ativação de Skills: As habilidades ativas equipadas serão ativadas por teclas de atalho numéricas (1, 2, 3, 4, etc.) ou outras teclas configuráveis (ex: Q, W, E, R), com ícones visíveis na HUD para indicar as habilidades equipadas e seus respectivos atalhos.
-Menus: O menu de habilidades, mochila e outros itens será acessado pressionando a tecla "E".
-
-8. Economia do Jogo
-
-Comércio Regional: NPCs em cada região comprarão e venderão itens.
-Valor de Itens: Itens de regiões mais distantes ou de biomas corrompidos terão um valor de venda maior nas vilas iniciais, simulando a ideia de "importação" e raridade.
-Itens de Suporte: Mercadores venderão itens consumíveis essenciais para a sobrevivência e o combate.
-Itens Consumíveis:
-Poções de Vida: Para restaurar a saúde do jogador.
-Poções de Aura: Para restaurar o recurso "Aura" das skills.
-Poções de Buff: Concedem bônus temporários (ex: aumento de dano, defesa, velocidade).
-Comida: Essencial para gerenciar a barra de utilidades (fome). Pode ser comprada, caçada de animais ou coletada de plantas/frutas.
-
-9. Interface do Usuário (UI) e Head-Up Display (HUD)
-
-HUD Principal:
-Barra de Vida: Exibida na parte superior da barra de skills, mostrando a saúde atual do jogador.
-Barra de Aura/Recurso: Próxima à barra de vida, indicando o recurso disponível para as skills.
-Barra de Skills Ativas: Localizada na parte inferior central da tela. Permitirá arrastar e soltar as skills desejadas para os slots de atalho (Q, W, E, R, 1, 2, 3, 4, etc.).
-Arma Escolhida: Um ícone ou representação da arma principal do jogador será exibido no canto inferior esquerdo da tela.
-Nível da Arma: Abaixo do ícone da arma, será mostrado seu "Nível". Este nível será uma representação do poder geral da arma, baseado na quantidade de skills absorvidas e no nível individual de cada skill.
-Barra de Utilidades (Fome): Uma barra indicadora de fome será visível na HUD.
-Gerenciamento de Fome: O jogador precisará consumir comida (comprada, caçada ou coletada) para manter esta barra cheia.
-Penalidades por Fome: Se a barra de fome estiver baixa ou vazia, o jogador sofrerá debuffs básicos (ex: redução de regeneração de vida/aura, diminuição de velocidade de movimento ou dano).
-Menus: O menu de habilidades, mochila e outros itens será acessado pressionando a tecla "E".
-
-10. Design de Áudio
-
-Efeitos Sonoros Padrões: Cada ação do jogador (ataques básicos, uso de skills, movimentação, interações com objetos) e eventos do mundo (dano recebido, inimigos atacando, coleta de itens) terá efeitos sonoros padrões e distintos.
-Trilha Sonora Dinâmica: A música ambiente mudará de acordo com o bioma, o estado de corrupção da área e a intensidade do combate (música mais tensa durante waves ou batalhas contra chefes).
-
-11. Sistema de Quests Secundárias e Recompensas
-
-Além da missão principal de selar os Arquidemônios, o jogo oferecerá uma variedade de quests secundárias para enriquecer a experiência do jogador.
-Tipos de Quests:
-Coleta de Itens Específicos: NPCs podem pedir itens raros ou específicos encontrados em biomas distantes ou dungeons. A recompensa pode ser ouro, itens consumíveis, ou até mesmo itens únicos com skills diferentes que não são obtidas por absorção comum.
-Caça de Monstros: Eliminar um número específico de inimigos ou monstros de elite em uma área.
-Desafios de Tempo: Completar uma tarefa ou dungeon dentro de um limite de tempo.
-Resgate: Salvar NPCs em perigo ou recuperar itens perdidos.
-Missões de Reputação: Quests que, ao serem concluídas, aumentam a reputação do jogador com facções ou NPCs específicos, desbloqueando acesso a novos serviços ou itens.
-Recompensas:
-Ouro e Itens Consumíveis: Recompensas padrão para a maioria das quests.
-Itens de Absorção Raros: Itens que desbloqueiam skills poderosas ou incomuns.
-Armaduras: O jogador poderá obter peças de armadura como recompensa de quests ou através de mercadores específicos. As armaduras serão um componente crucial para aumentar a defesa e a vida máxima do personagem, complementando a evolução da arma.
-Acesso a Novas Áreas: Certas quests podem desbloquear passagens ou revelar locais secretos no mapa.
-Lore e Dicas: Quests podem aprofundar a história do mundo e fornecer dicas valiosas sobre a localização de Arquidemônios ou segredos.
-
-12. Objetivos do Projeto
+     O jogador descobre essas builds organicamente, não por um menu, mas por feedbacks visuais, efeitos e falas da arma.
+ 
+    4.6. Interações e Sinergias (comentários da arma):
+    Combinação de Skills cria efeitos sinérgicos. Ex:
+    Usar "Rajada de Fogo" + "Campo de Óleo" = Incêndio em área.
+    Usar "Prisão de Espinhos" + "Explosão Demoníaca" = Dano massivo a inimigos presos. A arma comenta sarcasticamente sobre suas escolhas: “Ah sim, claro, mais veneno.     
+    Porque nada diz ‘herói’ como envenenar tudo que respira.”
     
-Aprendizado em desenvolvimento de jogos.
-Criar um jogo que o desenvolvedor gostaria de jogar.
-Futuro: Possível lançamento para amigos/Steam.
+    4.7. Reconfiguração (Respec):
+    A arma pode “digerir” skills antigas para abrir espaço para novas. O jogador pode oferecer fragmentos especiais (drop de bosses ou dungeons) para:
+    Esquecer uma skill.
+    Reduzir seu nível.
+    Substituir uma skill com algo aleatório (com risco). A arma odeia isso e comenta sarcasticamente, mas permite: “Estamos jogando fora a Explosão Etérea por uma Folhinha 
+    Saltitante... ótimo plano, chefe.”
 
-13. Extras e Possíveis Futuras Features
-    
-New Game+: Manter skills, inimigos mais fortes com builds diferentes.
-Modo Infinito de Waves.
-Modo História com decisões morais.
-Sistema de pets místicos de itens raros.
-Crafting avançado: Fundir itens absorvíveis.
+5. Exploração e Estrutura do Mundo
+   
+    5.1. Mapa Interligado e Aberto
+    O mundo de Reforge é um mapa interligado com áreas bloqueadas por skills. Algumas regiões só são acessíveis com determinadas habilidades (ex: dash para atravessar 
+    buracos, skill de fogo para queimar raízes). O mapa terá atalhos, segredos e zonas ocultas reveladas ao evoluir a arma.
+   
+    5.2. Regiões e Cidades
+    O mundo é dividido em regiões distintas, cada uma com clima, fauna, inimigos e drops próprios. As cidades são pontos de apoio com comércio e histórias locais.
 
-14. Requisitos e Considerações Técnicas
+        5.2.1. Estrutura Global
+            Região             / Clima                     /  Inimigo                                   /  Drops Característicos
+            Floresta de Miril  - Densa, viva, vibrante     - Plantas carnívoras, feras místicas         - Folhas mágicas, seiva, raízes vivas
+            Planícies do Fim   - Vento constante, vastidão - Bestas blindadas, arqueiros fantasmas      - Ossos, couro, penas cinzas
+            Caverna de Tharn   - Escura, sufocante         - Demônios, morcegos, monstros de sombra     - Garras, pedras arcanas, ectoplasma
+            Montanhas do Norte - Neve, gelo, altitude      - Golens, espectros                          - Cristais, gelo eterno, escamas
+            Terras Arruinadas  - Pós-batalha, corrompida   - Fantasmas, restos de cavaleiros, parasitas - Armaduras quebradas, armas malditas
+            Cidade Central (hub) - Centro de tudo          -                                            - Acesso a tudo, NPCs principais, upgrade da arma
+
+    5.3. Sistema de Dungeons:
+     - As dungeons são portais abertos após absorção do poder da caixa de Pandora.
+     - Geradas dinamicamente (semi-procedural), baseadas em: sua build (afinidade influencia inimigos), progresso (quanto mais avançado, mais complexas), eventos globais.
+     - Contêm: waves de inimigos, mini puzzles, chefes intermediários, loots com drops raros.
+     - Ao completar: Drop especial para arma, fragmento de narrativa desbloqueado, skill rara garantida.
+
+            5.3.1. Tipos de Eventos nas Dungeons
+            Eventos de escolha: Salvar ou sacrificar um NPC → consequência futura.
+            Eventos de memória: Arma revela memórias do passado (vídeos, imagens ou frases-chave).
+            Eventos randômicos: Sala de troca, sala de maldição, sala de desafio.
+       
+    5.4. Eventos Aleatórios e Exploração Dinâmica
+    Ao explorar, o jogador pode encontrar:
+    Mercadores viajantes raros.
+    NPCs em perigo que podem virar aliados.
+    Rituais de absorção corrompida (buffs poderosos com riscos).
+    Portais instáveis para micro-dungeons. A chance desses eventos ocorre com base no nível do jogador, região e reputação com facções. "Genial. Entramos voluntariamente        numa caverna fedendo a enxofre. Que tal pular num poço agora?”
+   
+    5.5. Interação com a Arma durante a Exploração
+    A arma interage constantemente com o ambiente:
+    Alerta perigos (ou te incentiva a entrar mesmo assim).
+    Faz piadas com NPCs.
+    Revela segredos se for levada para locais específicos (ex: mural antigo, templo, ruína).
+    “Essa estátua aí... fui eu quem quebrei séculos atrás. Ops.”
+
+6. Sistema de Economia e Cidades
+    6.1. NPCs com Comportamento Variável
+    Os NPCs não são genéricos. Suas falas, opções de interação e até presença no mapa variam conforme:
+    A reputação do jogador.
+    A build atual (afinidade com luz, trevas, natureza, etc.).
+    A região onde estão.
+    Progresso na história.
+    Exemplos: Um clérigo pode recusar falar com jogadores de build sombria. Um mercador pode dar desconto para builds do tipo gelo por ser de uma cidade montanhosa.
+
+
+    6.2. Economia Regional e Flutuação de Preços
+    Cada cidade tem uma economia própria, ligada ao tipo de drop da região. Isso afeta:
+    Preços de itens.
+    Itens disponíveis para troca.
+    Aceitação de itens absorvíveis.
+    Demanda mercantil (miniquests).
+
+Cidade
+Itens Valorizados
+Itens Baratos
+Especialidade
+Vila Miril
+Folhas Vivas, Raízes
+Metal, Chamas
+Poções naturais, buffs temp
+Tothran
+Garras, Pedras
+Cristais, Penas
+Forja de arma, Melhorias skill
+Gelstheim
+Gelo eterno, Escamas
+Itens orgânicos
+Armaduras,Resistência elemental
+
+
+    Impactos da Economia Regional: Os preços dos itens mudam com o tempo ou com a interferência do jogador (pode criar escassez de itens). Ajudar cidades aumenta seus           estoques e reduz preços.
+
+    6.3. Sistema de Comércio entre Regiões
+    O jogador pode atuar como comerciante: transportar itens valiosos de uma cidade para outra e vendê-los com lucro. Algumas cidades possuem mercado negro, aceitando itens 
+    “proibidos” para criar skills instáveis. Existe chance de assalto por inimigos, quebra de carroça ou traição de NPCs em transportes.
     
-Esta seção detalha os requisitos básicos e as considerações de desenvolvimento para "Reforge" no GameMaker Studio.
-14.1. Requisitos de Hardware (Estimativa para PC)
-Mínimos:
-Processador: Dual Core 2.0 GHz ou superior.
-Memória RAM: 4 GB.
-Placa de Vídeo: Compatível com DirectX 9.0c e Shader Model 3.0 (integrada ou dedicada, 512 MB VRAM).
-Armazenamento: 500 MB de espaço disponível.
-Sistema Operacional: Windows 7/8/10 (64-bit).
-Recomendados:
-Processador: Quad Core 2.5 GHz ou superior.
-Memória RAM: 8 GB.
-Placa de Vídeo: Dedicada com 1 GB VRAM ou mais (compatível com DirectX 11).
-Armazenamento: 1 GB de espaço disponível (para futuras expansões).
-Sistema Operacional: Windows 10 (64-bit).
-14.2. Requisitos de Software
-Motor de Jogo: GameMaker Studio 2 (ou versão mais recente).
-Linguagem de Programação: GML (GameMaker Language).
-Ferramentas de Arte: Programas de edição de pixel art (ex: Aseprite, Photoshop, GIMP).
-Ferramentas de Áudio: Software de edição de áudio (ex: Audacity, FL Studio).
-14.3. Considerações de Desenvolvimento
-Otimização de Performance:
-Pixel Art: Embora o estilo ajude na performance, é crucial otimizar o uso de sprites e texturas. Evitar sprites muito grandes ou animações excessivamente complexas que possam sobrecarregar a GPU.
-Gerenciamento de Objetos: Implementar um sistema eficiente para criação e destruição de inimigos, projéteis e efeitos para evitar gargalos de performance, especialmente durante as waves intensas.
-Sistema de Câmera: A câmera top-down isométrica deve ser otimizada para seguir o jogador suavemente sem causar "stuttering" ou quedas de FPS.
-Gerenciamento de Memória: Monitorar o uso de memória, especialmente com a quantidade crescente de assets (sprites de inimigos, itens, tilesets de biomas).
-Criação de Assets:
-Coerência Visual: Manter a coerência do estilo pixel art em todos os sprites (personagem, inimigos, itens, ambiente).
-Animações: Criar animações fluidas para o personagem (movimento, ataques, uso de skills), inimigos (movimento, ataques, morte) e efeitos visuais.
-Tilesets: Desenvolver tilesets modulares para a construção eficiente dos biomas e dungeons no mapa-múndi e nos mapas separados das dungeons.
-Escalabilidade:
-Projetar o código GML de forma modular para facilitar a adição de novos itens, skills, inimigos e biomas no futuro, sem a necessidade de reescrever grandes partes do jogo.
-Considerar a implementação de sistemas de dados (JSON, arrays) para gerenciar informações de itens, skills e inimigos, tornando-os facilmente editáveis.
-Testes:
-Realizar testes contínuos de jogabilidade, balanceamento (especialmente das skills e da dificuldade das waves) e performance em diferentes configurações de hardware.
-Testar a funcionalidade do temporizador e das penalidades para garantir que funcionem como esperado e criem a experiência desejada.
-Interface do Usuário (UI):
-Desenvolver a UI de forma responsiva para garantir que ela se adapte bem a diferentes resoluções de tela.
-Garantir que todos os elementos da HUD e dos menus sejam claros, intuitivos e forneçam feedback visual adequado.
+    6.4. NPCs Comerciais e Reforjadores
+    Ferreiro especializado: Permite reforjar a arma, mudando suas afinidades.
+    Vendedor de escombros: Troca partes quebradas de inimigos por buffs passivos.
+    Mercador de almas: Troca almas por skills “corrompidas” (fortes, mas imprevisíveis).
+    Mago das runas: Vende runas únicas que podem ser absorvidas para mudar o efeito de uma skill já existente.
+
+
+
+
+
+    6.5. Facções com Causas e Missões Próprias
+    O jogador pode interagir com facções que possuem suas próprias agendas, inimigos e recompensas.
+🔰 Exemplos de Facções:
+Guardião da Forja: Domínio das armas e da honra -> Skills exclusivas de arma.
+Sombras do Véu: Culto secreto ao equilíbrio -> Itens únicos e finais alternativos.
+Círculo Verdejante: Defensores da vida e natureza -> Buffs de cura e defesa.
+Lâmina do Abismo: Destruidores e caçadores de chefes -> Acesso a dungeons ocultas e equipamentos sinistros.
+Reputação: Cada ação aumenta ou reduz sua reputação com uma ou mais facções. Matar certos inimigos ou absorver determinados tipos de skill pode ofender ou agradar facções.
+
+7. Sistema de Combate e Inimigos
+   
+    7.1. Tipos de Ataques
+    Melee (Corpo a Corpo): Usa a arma principal (espada, escudo, lança, arco) para ataques próximos.
+    Ranged (À Distância): Para armas que permitem ataques à distância (arco e habilidades especiais da arma).
+    Skills Ativas e Passivas: Ativas desencadeadas manualmente (ex: ataque especial que consome itens absorvidos). Passivas melhoram atributos do personagem e da arma (ex: 
+    aumento da velocidade, chance de crítico).
+   
+    7.2. IA dos Inimigos (Inimigos Comuns)
+    IA Baseada em Estados: Patrulha, Alerta, Agressivo, Fuga (alguns inimigos).
+    Comportamento Específico por Tipo: Inimigos voadores ignoram colisões de solo. Inimigos blindados requerem ataques laterais ou habilidades específicas. Inimigos 
+    ilusórios desaparecem se atacados sem skill mágica ativa.
+    Grupos Inteligentes: Em áreas mais avançadas, inimigos atacam em sincronia (um puxa agro, outro embosca).
+
+    7.3. Chefes e Arquidemônios (Bosses das Waves)
+    Os bosses representam picos de desafio e cada um é guardião de um Espólio Singular necessário para liberar skills especiais na arma.
+    🧠 Estrutura dos Bosses: Fases (mudam padrão de comportamento com base na vida), frases únicas (conexão narrativa), comportamentos únicos (teletransporte, manipulação 
+    de cenário, invocação de mobs), e diálogos com a arma do jogador (cutscenes rápidas antes ou depois).
+    🧬 Drop Especial: Cada boss solta um item de absorção única para liberar: uma skill rara, uma transformação visual na arma, um fragmento da memória selada da arma.
+   
+    7.4. IA Adaptativa (em Dungeons)
+    A cada dungeon superada, o sistema ajusta o comportamento dos inimigos: mais velocidade de reação, grupos com sinergia (healer + melee), inimigos começam a evitar 
+    skills usadas com frequência. Bosses podem reaparecer com novos padrões, se invocados novamente.
+
+8. Inventário, Interface de Habilidades e Sistema de Upgrades
+   
+    8.1. Sistema de Inventário
+    O inventário é o coração da progressão do jogador. Ele armazena todos os itens absorvíveis, consumíveis, materiais especiais e drops raros usados para:
+    Liberar novas skills.
+    Melhorar skills existentes.
+    Evoluir a arma.
+    Trocar por favores em cidades (eventos, reputação, upgrades estéticos).
+    Estrutura de um Item: {"nome": "Essência Ardente", "sprite": spr_essencia_fogo, "tipo": "material", "consumível": false, "absorvível": true, "elemento": "fogo", 
+    "poder": 12, "skill_associada": "Explosão Flamejante"}
+    Sistema de filtros e busca será adicionado futuramente.
+
+
+    8.2. Interface de Habilidades (Skill Tree Adaptativa)
+    A Skill Tree não é fixa. Ela cresce organicamente de acordo com os tipos de itens absorvidos. Cada skill aprendida abre ramificações de evolução e combinações.
+    🧭 Exibição: Interface circular ou radial, skills conectadas por afinidade (cores e elementos), exibição por uso frequente e nível atual.
+   
+    8.3. Sistema de Evolução da Arma (Build)
+    A arma evolui em conjunto com o jogador e assume formas e efeitos visuais conforme as skills absorvidas.
+    🎭 Aparência: Visual da arma muda com a afinidade dominante. Quanto mais skills absorvidas de um mesmo tipo, mais a arma "corrompe" seu estilo visual (ex: flamejante, 
+    sombria, angelical...).
+    💡 Vontade da Arma: A arma interage com as escolhas do jogador. Critica ou elogia o tipo de skill absorvido. Pode se recusar a usar uma skill por tempo limitado se o 
+    jogador "trair" uma afinidade.
+   
+    8.4. Sistema de Nível por Skill (Sem XP Tradicional)
+    O jogador não sobe de nível por XP, mas sim por:
+    Quantidade de skills absorvidas.
+    Nível individual de cada skill.
+    Diversidade de builds experimentadas.
+    Nível = Soma dos níveis de todas as skills absorvidas.
+    🛠 Efeitos do Nível: Aumenta HP, estamina e velocidade de movimento. Desbloqueia diálogos com NPCs e interações secretas. Permite acessar dungeons e regiões mais 
+    complexas.
+   
+    8.5. Resumo da Progressão
+    Sistema
+    Como Evolui
+    Impacto
+    Skills
+    Uso e absorção de itens
+    Melhora combate e desbloqueia novas áreas
+    Arma
+    Afinidade e tipo de skills absorvidas
+    Visual, diálogos e poder
+    Nível
+    Soma dos níveis de skills
+    Novas áreas, eventos e buffs
+    Build
+    Escolhas estratégicas de skillset
+    Estilo de jogo e finais possíveis
+    
+    Exportar para as Planilhas
+
+9. Arte e Áudio
+    9.1. Arte e Design Visual
+    Estilo Visual: Pixel art detalhada, com estética isométrica para dar sensação de profundidade e perspectiva.
+    Personagens, Inimigos e Itens: Animações frame a frame.
+    Tilesets: Para construção das dungeons e mapas, com variações para diferentes biomas e cidades.
+    Animações: Movimentação fluida com 8 direções. Animações específicas para ataques, bloqueios, uso de skills e interações.
+   
+    9.2. Interface de Usuário (UI) e Experiência do Usuário (UX)
+    UI/UX: Interface limpa e intuitiva, com HUD para vida, mana, stamina, inventário e skills.
+    Menus: Seleção de classe, upgrades de skill, e inventário.
+   
+    9.3. Áudio
+    Música: Trilhas sonoras ambientais para cidades, dungeons e batalhas. Música adaptativa que muda conforme a situação do jogo.
+    Efeitos Sonoros: Sons para ataques, absorção de itens, uso de skills, passos, interações e notificações. Feedback sonoro para cooldowns, danos e pickups.
+
+10. Aspectos Técnicos
+    10.1. Motor Gráfico e Plataforma
+    Motor: GameMaker Studio 2/3 (GameMaker Language - GML).
+    Foco: Engine 2D, facilita o desenvolvimento do RPG isométrico com visão isométrica.
+    Suporte Multiplataforma: Windows, macOS, Linux, e exportação para consoles e mobile no futuro.
+    Renders: Gráficos 2D com sprites em pixel art estilizados. Suporte para camadas para simular profundidade. Uso de máscaras de colisão pixel-perfect para interações 
+    precisas.
+    
+    10.2. Linguagem de Programação
+    GameMaker Language (GML): Linguagem de script proprietária do GameMaker, baseada em sintaxe similar ao C e JavaScript.
+    Funcionalidades: Permite manipulação de objetos, eventos, colisões, animações, sons e lógica do jogo.
+    Modularidade: Suporte para criação de scripts modulares e reutilizáveis (funções e scripts customizados).
+    
+    10.3. Estrutura de Dados
+    Inventário e Itens: Estruturados em dicionários e arrays (GML) para armazenar atributos (nome, sprite, poder, consumível, etc).
+    Persistência: Possibilidade de salvar e carregar dados em JSON para persistência entre sessões.
+    Skills e Builds: Tabelas para armazenar níveis de skills, efeitos e cooldowns. Sistema modular para adicionar novos skills via dados configuráveis.
+    
+    10.4. Colisão e Física
+    Detecção de Colisão: Uso intensivo de place_meeting e instance_place para colisões pixel-perfect.
+    Máscaras de Colisão: Customizadas para cada sprite, inclusive para ataques e habilidades.
+    Movimentação: Sistema baseado em velocidade horizontal (hsp) e vertical (vsp), com resolução detalhada para impedir atravessar objetos. Script reutilizável para 
+    movimentação de jogadores e inimigos.
+    
+    10.5. Requisitos Mínimos e Plataformas Alvo
+    Plataforma Inicial: Windows Desktop (Windows 10+).
+    Requisitos Mínimos: Processador Dual-Core 2.0 GHz ou superior, 4 GB RAM, Placa gráfica compatível com DirectX 9 (integrada serve), Espaço em disco ~500 MB.
+    Futuro: Possibilidade de exportação para macOS, Linux, e plataformas móveis com ajustes.
+    
+    10.6. Ferramentas Auxiliares
+    Editor de Pixel Art: Aseprite, Piskel ou similar para criação de sprites.
+    Editor de Áudio: Audacity, FL Studio para edição e criação de sons.
+    Versionamento: GitHub para controle de versões e backup do código.
+
+11. Vida, Morte e Ressurgimento
+    11.1. Sistema de Vida
+    Barra de vida do jogador visível na UI.
+    Ao perder toda a vida, o jogador "morre" e ressuscita em checkpoints ou cidades específicas.
+    
+    11.2. Penalidades de Morte
+    Perda de parte dos itens consumíveis (ex: folhas, espólios) que estavam sendo absorvidos.
+    Diminuição temporária de algumas skills passivas (ex: redução de dano por 5 minutos).
+    Reputação com facções pode ser afetada dependendo da causa da morte.
+    
+    11.3. Checkpoints e Save Points
+    Localizados em cidades e dentro de dungeons (como altares ou fogueiras).
+    Restauram vida, mana e stamina, além de permitir salvar o progresso.
+
+12. Finais Múltiplos e Narrativa Dinâmica
+    12.1. Decisões do Jogador Moldam o Final
+    Escolha da classe inicial (arma) impacta possíveis finais.
+    Relações com facções influenciam desfechos e até missões finais.
+    
+    12.2. Evolução da Arma e Finais
+    A arma sarcástica reage conforme o uso de habilidades, absorção e escolhas do jogador:
+    Final “Voltar ao Normal”: Você ajuda a arma a refazer o selo, sacrificando tudo. A arma volta ao baú. Você esquece de tudo — e o ciclo pode recomeçar.
+    Final “Fuga Covarde”: Você abandona a missão, foge para longe. O mundo é consumido lentamente. A arma zomba de você até os créditos.
+    Final “Domínio”: Você força a arma a absorver poder demais, desequilibra a balança. Ela perde o controle… e você se torna o novo selo.
+    Final Secreto “Guardião Substituto”: Ao entender o peso do sacrifício, você voluntariamente se funde com a arma para contê-la. Um novo ciclo começa — mas agora você é o 
+    guardião.
+    Finais Implícitos pela Afinidade da Arma:
+    Se usada para absorver apenas itens puros → final "Herói Libertador".
+    Se usada para absorver itens sombrios/monstros → final "Guardião Sombrio".
+    Uso equilibrado → final "Equilibrador do Reino".
+    
+    12.3. Narrativa Interativa
+    A arma sarcástica tem falas dinâmicas, comentando as ações do jogador, e pode influenciar decisões.
+    Interações com NPCs e facções variam conforme o progresso e build.
+
 
